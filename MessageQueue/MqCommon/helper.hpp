@@ -11,6 +11,8 @@
 #include <atomic>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <cerrno>
 #include <sys/stat.h>
 #include <sqlite3.h>
 #include "logger.hpp"
@@ -23,7 +25,7 @@ namespace mq {
     public:
         SqliteHelper(const std::string& dbfile)
             : _dbfile(dbfile),
-            _handler(nullptr)
+              _handler(nullptr)
         {}
 
         bool open(int safe_lavel = SQLITE_OPEN_FULLMUTEX) {
@@ -146,6 +148,7 @@ namespace mq {
 
         bool read(std::string& body) {
             size_t filesize = this->size();
+            body.resize(filesize);
             return this->read(&body[0], 0, filesize);
         }
 
@@ -182,13 +185,14 @@ namespace mq {
             }
         }
 
-        bool createFile() {
-            std::ifstream ifs(_filename.c_str(), std::ios::binary | std::ios::in);
-            if (!ifs.is_open()) {
-                ELOG("%s, 文件创建失败\n", _filename.c_str());
+        static bool createFile(const std::string& filename) {
+            // 只有当创建的文件具有写属性的时候才会创建，若只有读属性则不可以创建
+            std::ofstream ofs(filename.c_str(), std::ios::binary | std::ios::out);
+            if (!ofs.is_open()) {
+                ELOG("%s, 文件创建失败：%s\n", filename.c_str(), strerror(errno));
                 return false;
             }    
-            ifs.close();
+            ofs.close();
             return true;        
         }
 
@@ -196,7 +200,7 @@ namespace mq {
             return (::remove(filename.c_str()) == 0);
         }
 
-        bool createDirectory(const std::string& path) {
+        static bool createDirectory(const std::string& path) {
             // "aaa/ccc/sss/qwqw"
             size_t pos = 0, index = 0;
             std::string sep = "/";
@@ -205,7 +209,6 @@ namespace mq {
                 if (pos == std::string::npos) {
                     int ret = ::mkdir(path.c_str(), 0775);
                     if (ret != 0) {
-                        ELOG("%s 创建目录失败\n", path.c_str());
                         return false;
                     } else {
                         return true;
@@ -213,8 +216,8 @@ namespace mq {
                 }
                 std::string sub_path = path.substr(0, pos);
                 int res = ::mkdir(sub_path.c_str(), 0775);
-                if (res != 0) {
-                    ELOG("%s 创建目录失败\n", sub_path.c_str());
+                if (res != 0 && errno != EEXIST) {
+                    ELOG("%s 创建目录失败：%s\n", sub_path.c_str(), strerror(errno));
                     return false;
                 }
                 index = pos + sep.size();
@@ -223,7 +226,7 @@ namespace mq {
             return true;
         }
 
-        bool removeDirectory(const std::string& path) {
+        static bool removeDirectory(const std::string& path) {
             // 使用指令删除目录
             std::string cmd = "rm -rf " + path;
             return (::system(cmd.c_str()) != 0);

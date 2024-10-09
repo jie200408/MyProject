@@ -222,6 +222,7 @@ namespace mq {
         }
 
         void clear() {
+            std::unique_lock<std::mutex> lock(_mutex);
             // 删除持久化数据管理中的表格
             _mapper.removeTable();
             _exchanges.clear();

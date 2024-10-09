@@ -1,3 +1,6 @@
+threadpool:threadpool.cc
+	g++ -o $@ $^ -std=c++14 -lpthread
+
 package:packaged_task.cc
 	g++ -o $@ $^ -std=c++14 -lpthread
 

@@ -12,34 +12,39 @@ public:
     }
 
     virtual void TearDown() override {
-        // mqptr->clear();
+        mqptr->clear();
     }
 };
 
-// TEST(queue_test, insert_test) {
-//     std::unordered_map<std::string, std::string> map1{{"k1", "v1"}, {"k2", "v2"}};
-//     std::unordered_map<std::string, std::string> map2;
+TEST(queue_test, insert_test) {
+    std::unordered_map<std::string, std::string> map1{{"k1", "v1"}};
+    std::unordered_map<std::string, std::string> map2;
 
-//     mqptr->declareQueue("queue1", true, false, false, map1);
-//     mqptr->declareQueue("queue2", true, false, false, map1);
-//     mqptr->declareQueue("queue3", true, false, false, map1);
-//     mqptr->declareQueue("queue4", true, false, false, map1);
-// }
+    mqptr->declareQueue("queue1", true, false, false, map1);
+    mqptr->declareQueue("queue2", true, false, false, map1);
+    mqptr->declareQueue("queue3", true, false, false, map1);
+    mqptr->declareQueue("queue4", true, false, false, map1);
+}
 
 TEST(queue_test, select_test) {
-    ASSERT_EQ(mqptr->size(), 3);
+    ASSERT_EQ(mqptr->exists("queue1"), true);
+    ASSERT_EQ(mqptr->exists("queue2"), true);
+    ASSERT_EQ(mqptr->exists("queue3"), true);
+    ASSERT_EQ(mqptr->exists("queue4"), true);
+    ASSERT_EQ(mqptr->size(), 4);
     mq::MsgQueue::ptr mp = mqptr->selectQueue("queue1");
     ASSERT_EQ(mp->name, "queue1");
     ASSERT_EQ(mp->durable, true);
     ASSERT_EQ(mp->exclusive, false);
     ASSERT_EQ(mp->auto_delete, false);
-    ASSERT_EQ(mp->getArgs(), "k1=v1&k2=v2&");
+    ASSERT_EQ(mp->getArgs(), "k1=v1&");
 }
 
 TEST(queue_test, remove_test) {
     mqptr->deleteQueue("queue3");
-    ASSERT_EQ(mqptr->size(), 2);
-
+    ASSERT_EQ(mqptr->size(), 3);
+    ASSERT_EQ(mqptr->exists("queue3"), false);
+    
 }
 
 int main(int argc, char* argv[]) {
