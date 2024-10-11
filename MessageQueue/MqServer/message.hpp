@@ -24,14 +24,21 @@ namespace mq {
             std::string body = msg->payload().SerializeAsString();
             size_t offset;
             offset = helper.size();
+            // 先写入数据的长度，8字节长度，然后在写入消息
+            size_t msg_size = body.size();
+            bool ret = helper.write((char*)(&msg_size), offset, sizeof(size_t));
+            if (ret == false) {
+                ELOG("写入数据长度失败\n");
+                return false;
+            }
             // 将数据存放到适当的位置
-            bool ret = helper.write(body.c_str(), offset, body.size());
+            ret = helper.write(body.c_str(), offset + sizeof(size_t), body.size());
             if (ret == false) {
                 ELOG("写入数据失败\n");
                 return false;
             }
             // 更新数据中存储的位置，以及数据的长度
-            msg->set_offset(offset);
+            msg->set_offset(offset + sizeof(size_t));
             msg->set_length(body.size());
             return true;
         }
@@ -45,12 +52,12 @@ namespace mq {
                 // 从文件中读出数据
                 bool ret;
                 size_t length = 0;
-                ret = helper.read((char*)(&length), offset, 4);
+                ret = helper.read((char*)(&length), offset, sizeof(size_t));
                 if (ret == false) {
                     ELOG("读取数据长度失败\n");
                     return false;
                 }
-                offset += 4;
+                offset += sizeof(size_t);
                 std::string body(length, '\0');
                 ret = helper.read((char*)(&body[0]), offset, length);
                 if (ret == false) {
@@ -58,7 +65,8 @@ namespace mq {
                     return false;
                 }
                 MessagePtr msgp = std::make_shared<Message>();
-                msgp->ParseFromString(body);
+                // 对数据载荷进行反序列化
+                msgp->mutable_payload()->ParseFromString(body);
                 offset += length;
                 if (msgp->payload().vaild() == "0")
                     continue;
@@ -68,6 +76,9 @@ namespace mq {
         }
 
         bool createMsgFile() {
+            // 只有当当前文件不存在的时候才创建，否则会导致文件被重新刷新丢失数据
+            if (FileHelper(_datafile).exists() == true)
+                return true;
             bool ret = FileHelper::createFile(_datafile);
             if (ret == false) {
                 ELOG("创建 %s 文件失败\n", _datafile.c_str());
@@ -85,7 +96,10 @@ namespace mq {
                 basedir += '/';
             _datafile = basedir + _qname + DATAFILE_SUBFIX;
             _tempfile = basedir + _qname + TEMPFILE_SUBFIX;
-            assert(FileHelper::createDirectory(basedir));
+            // 只有当当前目录不存在的时候才创建对应的目录
+            DLOG("当前目录为: %s\n", basedir.c_str());
+            if (FileHelper(basedir).exists() == false)
+                assert(FileHelper::createDirectory(basedir));
             assert(this->createMsgFile());
         }
 
@@ -130,6 +144,8 @@ namespace mq {
                 return result;
             }
             // 2. 将有效的数据存放到临时文件中
+            // 先创建临时文件
+            FileHelper::createFile(_tempfile);
             for (auto& msg : result) {
                 ret = this->insert(msg, _tempfile);
                 if (ret == false) {
@@ -222,6 +238,7 @@ namespace mq {
                 msg->mutable_payload()->mutable_properties()->set_delivery_mode(bp->delivery_mode());
                 msg->mutable_payload()->mutable_properties()->set_routing_key(bp->routing_key());                
             }
+            msg->mutable_payload()->set_body(body);
             std::unique_lock<std::mutex> lock(_mutex);
             // 2.判断消息是否需要持久化
             if (msg->payload().properties().delivery_mode() == DeliveryMode::DURABLE) {
@@ -237,6 +254,7 @@ namespace mq {
                 _total_count++;
                 _durable_msgs[msg->payload().properties().id()] = msg;
             }
+            // DLOG("当前插入消息内容: %s\n", msg->payload().body().c_str());
             // 3.将消息加入到待推送链表中
             _msgs.push_back(msg);
 
@@ -248,6 +266,7 @@ namespace mq {
             std::unique_lock<std::mutex> lock(_mutex);
             if (_msgs.size() == 0)
                 return MessagePtr();
+
             MessagePtr msg = _msgs.front();
             _msgs.pop_front();
             // 现在将拿出的队首消息加入到待确认消息
@@ -300,6 +319,7 @@ namespace mq {
         }
 
         void clear() {
+            std::unique_lock<std::mutex> lock(_mutex);
             _mapper.removeMsgFile();
             _msgs.clear();
             _durable_msgs.clear();
@@ -320,6 +340,8 @@ namespace mq {
 
     class MessageManager {
     public:
+        using ptr = std::shared_ptr<MessageManager>; 
+
         MessageManager(const std::string& basedir)
             : _basedir(basedir)
         {}
@@ -336,6 +358,7 @@ namespace mq {
                     return;
                 }
                 msgp = std::make_shared<QueueMessage>(_basedir, qname);
+                _queue_msgs[qname] = msgp;
             }
             // 恢复内存中的数据
             msgp->recovery();
@@ -453,6 +476,12 @@ namespace mq {
                 msgp = it->second;                
             }
             return msgp->durable_count();   
+        }
+
+        void clear() {
+            std::unique_lock<std::mutex> lock(_mutex);
+            for (auto& it : _queue_msgs)
+                it.second->clear();
         }
 
     private:
