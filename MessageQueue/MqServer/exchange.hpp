@@ -64,17 +64,17 @@ namespace mq {
     // 交换机持久化管理类，数据存储在sqlite数据库中
     class ExchangeMapper {
     private:
-        #define SQL_DELETE "drop table if exists exchange_table;"
-        #define SQL_INSERT "insert into exchange_table values ('%s', %d, %d, %d, '%s');"
-        #define SQL_REMOVE "delete from exchange_table where name="
-        #define SQL_CREATE "create table if not exists exchange_table (     \
+        #define SQL_DELETE_EM "drop table if exists exchange_table;"
+        #define SQL_INSERT_EM "insert into exchange_table values ('%s', %d, %d, %d, '%s');"
+        #define SQL_REMOVE_EM "delete from exchange_table where name="
+        #define SQL_CREATE_EM "create table if not exists exchange_table (     \
             name varchar(32) primary key,                                   \
             type int,                                                       \
             durable int,                                                    \
             auto_delete int,                                                \
             args varchar(128)                                               \
         );"
-        #define SQL_SELECT "select name, type, durable, auto_delete, args from exchange_table;"
+        #define SQL_SELECT_EM "select name, type, durable, auto_delete, args from exchange_table;"
 
         
         static int selectCallback(void* args, int numcol, char** row, char** fields) {
@@ -104,7 +104,7 @@ namespace mq {
         }
 
         void createTable() {
-            int ret = _sql_helper.exec(SQL_CREATE, nullptr, nullptr);
+            int ret = _sql_helper.exec(SQL_CREATE_EM, nullptr, nullptr);
             if (ret == false) {
                 ELOG("表格创建失败\n");
                 abort();
@@ -113,7 +113,7 @@ namespace mq {
         
         void removeTable() {
             // 删除表格
-            int ret = _sql_helper.exec(SQL_DELETE, nullptr, nullptr);
+            int ret = _sql_helper.exec(SQL_DELETE_EM, nullptr, nullptr);
             if (ret == false) {
                 ELOG("表格删除失败\n");
                 abort();
@@ -122,7 +122,7 @@ namespace mq {
 
         bool insert(const Exchange::ptr& exchange) {
             char buff[256];
-            int n = snprintf(buff, sizeof(buff) - 1, SQL_INSERT, 
+            int n = snprintf(buff, sizeof(buff) - 1, SQL_INSERT_EM, 
                 (char*)exchange->name.c_str(),
                 exchange->type,
                 exchange->durable,
@@ -137,7 +137,7 @@ namespace mq {
 
         void remove(const std::string& name) {
             std::stringstream ss;
-            ss << SQL_REMOVE << "'" << name << "'" << ";";
+            ss << SQL_REMOVE_EM << "'" << name << "'" << ";";
             int ret = _sql_helper.exec(ss.str(), nullptr, nullptr);
             if (ret == false) 
                 ELOG("删除交换机数据失败\n");            
@@ -145,7 +145,7 @@ namespace mq {
 
         ExchangeMap recovery() {
             ExchangeMap result;
-            int ret = _sql_helper.exec(SQL_SELECT, selectCallback, (void*)(&result));
+            int ret = _sql_helper.exec(SQL_SELECT_EM, selectCallback, (void*)(&result));
             return result;
         }
     private:

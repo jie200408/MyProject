@@ -61,17 +61,17 @@ namespace mq {
 
     class MsgQueueMapper {
     private:
-        #define SQL_DELETE "drop table if exists queue_table;"
-        #define SQL_INSERT "insert into queue_table values ('%s', %d, %d, %d, '%s');"
-        #define SQL_REMOVE "delete from queue_table where name="
-        #define SQL_CREATE "create table if not exists queue_table (        \
+        #define SQL_DELETE_MQM "drop table if exists queue_table;"
+        #define SQL_INSERT_MQM "insert into queue_table values ('%s', %d, %d, %d, '%s');"
+        #define SQL_REMOVE_MQM "delete from queue_table where name="
+        #define SQL_CREATE_MQM "create table if not exists queue_table (        \
             name varchar(32) primary key,                                   \
             durable int,                                                    \
             exclusive int,                                                  \
             auto_delete int,                                                \
             args varchar(128)                                               \
         );"
-        #define SQL_SELECT "select name, durable, exclusive, auto_delete, args from queue_table;"
+        #define SQL_SELECT_MQM "select name, durable, exclusive, auto_delete, args from queue_table;"
         
         static int selectCallback(void* args, int numcol, char** row, char** fields) {
             MsgQueueMap* queue_map = static_cast<MsgQueueMap*>(args);
@@ -98,7 +98,7 @@ namespace mq {
         }
 
         void createTable() {
-            int ret = _sql_helper.exec(SQL_CREATE, nullptr, nullptr);
+            int ret = _sql_helper.exec(SQL_CREATE_MQM, nullptr, nullptr);
             if (ret == false) {
                 ELOG("表格创建失败\n");
                 abort();
@@ -106,7 +106,7 @@ namespace mq {
         }
 
         void removeTable() {
-            int ret = _sql_helper.exec(SQL_DELETE, nullptr, nullptr);
+            int ret = _sql_helper.exec(SQL_DELETE_MQM, nullptr, nullptr);
             if (ret == false) {
                 ELOG("表格删除失败\n");
                 abort();
@@ -115,7 +115,7 @@ namespace mq {
 
         bool insert(MsgQueue::ptr& msgqueue) {
             char buff[256];
-            int n = snprintf(buff, sizeof(buff) - 1, SQL_INSERT, 
+            int n = snprintf(buff, sizeof(buff) - 1, SQL_INSERT_MQM, 
                 (char*)msgqueue->name.c_str(),
                 msgqueue->durable,
                 msgqueue->exclusive,
@@ -130,7 +130,7 @@ namespace mq {
 
         void remove(const std::string& name) {
             std::stringstream sql_remove;
-            sql_remove << SQL_REMOVE;
+            sql_remove << SQL_REMOVE_MQM;
             sql_remove << "'" << name << "'";
             int ret = _sql_helper.exec(sql_remove.str(), nullptr, nullptr);
             if (ret == false)
@@ -139,7 +139,7 @@ namespace mq {
 
         MsgQueueMap recovery() {
             MsgQueueMap result;
-            int ret = _sql_helper.exec(SQL_SELECT, selectCallback, (void*)(&result));
+            int ret = _sql_helper.exec(SQL_SELECT_MQM, selectCallback, (void*)(&result));
             return result;
         }
     private:

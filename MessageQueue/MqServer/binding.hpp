@@ -35,17 +35,17 @@ namespace mq {
 
     class BindingMapper {
     private:
-        #define SQL_DELETE "drop table if exists binding_table;"
-        #define SQL_INSERT "insert into binding_table values ('%s', '%s', '%s');"
-        #define SQL_REMOVE "delete from binding_table where exchange_name='%s' and '%s';"
-        #define SQL_REMOVE_EXCHANGE "delete from binding_table where exchange_name='%s';"
-        #define SQL_REMOVE_MSGQUEUE "delete from binding_table where msgqueue_name='%s';"
-        #define SQL_CREATE "create table if not exists binding_table (      \
+        #define SQL_DELETE_BM "drop table if exists binding_table;"
+        #define SQL_INSERT_BM "insert into binding_table values ('%s', '%s', '%s');"
+        #define SQL_REMOVE_BM "delete from binding_table where exchange_name='%s' and '%s';"
+        #define SQL_REMOVE_EXCHANGE_BM "delete from binding_table where exchange_name='%s';"
+        #define SQL_REMOVE_MSGQUEUE_BM "delete from binding_table where msgqueue_name='%s';"
+        #define SQL_CREATE_BM "create table if not exists binding_table (      \
             exchange_name varchar(32),                                      \
             msgqueue_name varchar(32),                                      \
             binding_key varchar(128)                                        \
         );"
-        #define SQL_SELECT "select exchange_name, msgqueue_name, binding_key from binding_table;"
+        #define SQL_SELECT_BM "select exchange_name, msgqueue_name, binding_key from binding_table;"
 
         static int selectCallback(void* args, int numcol, char** row, char** fields) {
             BindingMap* result = static_cast<BindingMap*>(args);
@@ -66,7 +66,7 @@ namespace mq {
         }
 
         void createTable() {
-            int ret = _sql_helper.exec(SQL_CREATE, nullptr, nullptr);
+            int ret = _sql_helper.exec(SQL_CREATE_BM, nullptr, nullptr);
             if (ret == false) {
                 ELOG("表格创建失败\n");
                 abort();
@@ -74,7 +74,7 @@ namespace mq {
         }
 
         void removeTable() {
-            int ret = _sql_helper.exec(SQL_DELETE, nullptr, nullptr);
+            int ret = _sql_helper.exec(SQL_DELETE_BM, nullptr, nullptr);
             if (ret == false) {
                 ELOG("表格删除失败\n");
                 abort();
@@ -83,7 +83,7 @@ namespace mq {
 
         bool insert(Binding::ptr& binding) {
             char buff[256];
-            int n = snprintf(buff, sizeof(buff) - 1, SQL_INSERT, 
+            int n = snprintf(buff, sizeof(buff) - 1, SQL_INSERT_BM, 
                 (char*)binding->exchange_name.c_str(), 
                 (char*)binding->msgqueue_name.c_str(), 
                 (char*)binding->binding_key.c_str());
@@ -94,7 +94,7 @@ namespace mq {
 
         void remove(const std::string& ename, const std::string& qname) {
             char buff[256];
-            int n = snprintf(buff, sizeof(buff) - 1, SQL_REMOVE, ename.c_str(), qname.c_str());
+            int n = snprintf(buff, sizeof(buff) - 1, SQL_REMOVE_BM, ename.c_str(), qname.c_str());
             buff[n] = 0;
             std::string remove_sql(buff);
             _sql_helper.exec(remove_sql, nullptr, nullptr);
@@ -102,7 +102,7 @@ namespace mq {
 
         void removeExchangeBindings(const std::string& ename) {
             char buff[256];
-            int n = snprintf(buff, sizeof(buff) - 1, SQL_REMOVE_EXCHANGE, ename.c_str());
+            int n = snprintf(buff, sizeof(buff) - 1, SQL_REMOVE_EXCHANGE_BM, ename.c_str());
             buff[n] = 0;
             std::string remove_sql(buff);
             _sql_helper.exec(remove_sql, nullptr, nullptr);        
@@ -110,7 +110,7 @@ namespace mq {
 
         void removeMsgQueueBindings(const std::string& qname) {
             char buff[256];
-            int n = snprintf(buff, sizeof(buff) - 1, SQL_REMOVE_MSGQUEUE, qname.c_str());
+            int n = snprintf(buff, sizeof(buff) - 1, SQL_REMOVE_MSGQUEUE_BM, qname.c_str());
             buff[n] = 0;
             std::string remove_sql(buff);
             _sql_helper.exec(remove_sql, nullptr, nullptr);  
@@ -118,7 +118,7 @@ namespace mq {
 
         BindingMap recovery() {
             BindingMap result;
-            _sql_helper.exec(SQL_SELECT, selectCallback, (void*)(&result));
+            _sql_helper.exec(SQL_SELECT_BM, selectCallback, (void*)(&result));
             return result;
         }
 

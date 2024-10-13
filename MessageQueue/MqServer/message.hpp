@@ -97,7 +97,7 @@ namespace mq {
             _datafile = basedir + _qname + DATAFILE_SUBFIX;
             _tempfile = basedir + _qname + TEMPFILE_SUBFIX;
             // 只有当当前目录不存在的时候才创建对应的目录
-            DLOG("当前目录为: %s\n", basedir.c_str());
+            // DLOG("当前目录为: %s\n", basedir.c_str());
             if (FileHelper(basedir).exists() == false)
                 assert(FileHelper::createDirectory(basedir));
             assert(this->createMsgFile());
@@ -226,16 +226,18 @@ namespace mq {
             _total_count = _msgs.size();
         }
 
-        bool insert(const BasicProperties* bp, const std::string& body, DeliveryMode deliverymode) {
+        bool insert(const BasicProperties* bp, const std::string& body, bool queue_durable) {
             // 1.先构造对应的消息
             MessagePtr msg = std::make_shared<Message>();
             if (bp == nullptr) {
+                DeliveryMode mode = queue_durable ? DeliveryMode::DURABLE : DeliveryMode::UNDURABLE;
                 msg->mutable_payload()->mutable_properties()->set_id(UUIDHelper::uuid());
-                msg->mutable_payload()->mutable_properties()->set_delivery_mode(deliverymode);
+                msg->mutable_payload()->mutable_properties()->set_delivery_mode(mode);
                 msg->mutable_payload()->mutable_properties()->set_routing_key(std::string());
             } else {
+                DeliveryMode mode = queue_durable ? bp->delivery_mode() : DeliveryMode::UNDURABLE;
                 msg->mutable_payload()->mutable_properties()->set_id(bp->id());
-                msg->mutable_payload()->mutable_properties()->set_delivery_mode(bp->delivery_mode());
+                msg->mutable_payload()->mutable_properties()->set_delivery_mode(mode);
                 msg->mutable_payload()->mutable_properties()->set_routing_key(bp->routing_key());                
             }
             msg->mutable_payload()->set_body(body);
@@ -379,7 +381,7 @@ namespace mq {
             msgp->clear();
         }
 
-        bool insert(const std::string& qname, const BasicProperties* bp, const std::string& body, const DeliveryMode& mode) {
+        bool insert(const std::string& qname, const BasicProperties* bp, const std::string& body, bool queue_durable) {
             QueueMessage::ptr msgp;
             {
                 std::unique_lock<std::mutex> lock(_mutex);
@@ -390,7 +392,7 @@ namespace mq {
                 }    
                 msgp = it->second;          
             }
-            return msgp->insert(bp, body, mode);
+            return msgp->insert(bp, body, queue_durable);
         }   
         
         void ack(const std::string& qname, const std::string& msg_id) {
