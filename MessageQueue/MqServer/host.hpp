@@ -1,6 +1,7 @@
 #ifndef __M_HOST_H__
 #define __M_HOST_H__
 
+#include <google/protobuf/map.h>
 #include "exchange.hpp"
 #include "message.hpp"
 #include "queue.hpp"
@@ -26,7 +27,7 @@ namespace mq {
         }
 
         bool declareExchange(const std::string& ename, ExchangeType etype, bool edurable, 
-            bool eauto_delete, const std::unordered_map<std::string, std::string>& eargs) {
+            bool eauto_delete, const google::protobuf::Map<std::string, std::string>& eargs) {
             return _emp->declareExchange(ename, etype, edurable, eauto_delete, eargs);
         }
 
@@ -38,7 +39,7 @@ namespace mq {
 
         bool declareQueue(const std::string& msg_name, bool msg_durable, 
             bool msg_exclusive, bool msg_auto_delete, 
-            const std::unordered_map<std::string, std::string>& msg_args) {
+            const google::protobuf::Map<std::string, std::string>& msg_args) {
             // 声明一个队列，现在消息管理中将队列进行初始化
             _mmp->initQueueMessage(msg_name);
             return _mqmp->declareQueue(msg_name, msg_durable, msg_exclusive, msg_auto_delete, msg_args);
@@ -70,6 +71,7 @@ namespace mq {
             return _mmp->ack(qname, msg_id);
         }
 
+        // 获取一个队首消息，用于消费
         MessagePtr basicConsume(const std::string& qname) {          
             return _mmp->front(qname);
         }
@@ -103,6 +105,10 @@ namespace mq {
 
         bool existsBinding(const std::string& ename, const std::string& qname) {
             return _bmp->exists(ename, qname);
+        }
+
+        Exchange::ptr selectExchange(const std::string& ename) {
+            return _emp->selectExchange(ename);
         }
 
         void clear() {

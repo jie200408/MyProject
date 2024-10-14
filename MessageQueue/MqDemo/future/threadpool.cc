@@ -11,6 +11,7 @@
 
 class threadpool {
 private:
+    using ptr = std::shared_ptr<threadpool>;
     using func_t = std::function<void(void)>;
 
     // 线程入口函数，不断的从任务池中取出任务进行执行

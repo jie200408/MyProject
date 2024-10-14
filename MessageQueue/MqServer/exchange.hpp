@@ -4,6 +4,7 @@
 #include "../MqCommon/logger.hpp"
 #include "../MqCommon/helper.hpp"
 #include "../MqCommon/msg.pb.h"
+#include <google/protobuf/map.h>
 #include <iostream>
 #include <unordered_map>
 #include <mutex>
@@ -16,18 +17,18 @@ namespace mq {
     struct Exchange {
         using ptr = std::shared_ptr<Exchange>;
 
-        std::string name;                                   // 交换机名称
-        ExchangeType type;                                  // 交换机类型
-        bool durable;                                       // 是否继续持久化管理
-        bool auto_delete;                                   // 是否自动删除
-        std::unordered_map<std::string, std::string> args;  // 交换机的其他参数
+        std::string name;                                      // 交换机名称
+        ExchangeType type;                                     // 交换机类型
+        bool durable;                                          // 是否继续持久化管理
+        bool auto_delete;                                      // 是否自动删除
+        google::protobuf::Map<std::string, std::string> args;  // 交换机的其他参数
 
         Exchange() {}
 
         Exchange(const std::string& ename, ExchangeType etype, 
             bool edurable, 
             bool eauto_delete, 
-            std::unordered_map<std::string, std::string> eargs)
+            const google::protobuf::Map<std::string, std::string>& eargs)
             : name(ename),
               type(etype),
               durable(edurable),
@@ -166,7 +167,7 @@ namespace mq {
 
         // 声明交换机，增加一个交换机
         bool declareExchange(const std::string& name, ExchangeType type, bool durable, 
-            bool auto_delete, const std::unordered_map<std::string, std::string>& args) {
+            bool auto_delete, const google::protobuf::Map<std::string, std::string>& args) {
             // 需要先加锁
             std::unique_lock<std::mutex> lock(_mutex);
             // 判断当前需要插入的数据是否已经存在，若存在则我们不需要插入

@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package mq;
+
+import "msg.proto";
+
+// 打开信道
+message openChannelRequest {
+    string rid = 1;
+    string cid = 2;
+};
+
+// 关闭信道
+message closeChannelRequest {
+    string rid = 1;
+    string cid = 2;
+};
+
+// 声明交换机
+message declareExchangeRequest {
+    string rid = 1;
+    string cid = 2;
+    string exchange_name = 3;
+    ExchangeType exchange_type = 4;
+    bool durable = 5;
+    bool auto_delete = 6;
+    map<string, string> args = 7;
+};
+
+// 删除交换机
+message deleteExchangeRequest {
+    string rid = 1;
+    string cid = 2;
+    string exchange_name = 3;
+};
+
+// 声明队列
+message declareQueueRequest {
+    string rid = 1;
+    string cid = 2;
+    string queue_name = 3;
+    bool exclusive = 4;
+    bool durable = 5;
+    bool auto_delete = 6;
+    map<string, string> args = 7;
+};
+
+// 删除队列
+message deleteQueueRequest {
+    string rid = 1;
+    string cid = 2;
+    string queue_name = 3;
+};
+
+message queueBindRequest {
+    string rid = 1;
+    string cid = 2;
+    string exchange_name = 3;
+    string queue_name = 4;
+    string binding_key = 5;
+};
+
+message queueUnBindRequest {
+    string rid = 1;
+    string cid = 2;
+    string exchange_name = 3;
+    string queue_name = 4;   
+};
+
+// 消息的发布
+message basicPublishRequest {
+    string rid = 1;
+    string cid = 2;
+    string exchange_name = 3;   
+    BasicProperties properties = 4;
+    string body = 5;
+};
+
+// 消息的确认
+message basicAckRequest {
+    string rid = 1;
+    string cid = 2;
+    string queue_name = 3;   
+    string message_id = 4;
+};
+
+// 订阅消息
+message basicConsumeRequest {
+    string rid = 1;
+    string cid = 2;
+    string queue_name = 3;
+    string consumer_tag = 4;
+    bool auto_ack = 5;    
+}
+
+// 订阅的取消
+message basicCancelRequest {
+    string rid = 1;
+    string cid = 2;
+    string consumer_tag = 3;
+    string queue_name = 4;
+};
+
+// 消息的推送
+message basicConsumeResponce {
+    string cid = 1;
+    string consumer_tag = 2;
+    string body = 3;
+    BasicProperties properties = 4;
+};
+
+message basicCommonResponce {
+    string rid = 1;
+    string cid = 2;
+    bool ok = 3;    
+};

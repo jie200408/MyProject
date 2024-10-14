@@ -4,6 +4,7 @@
 #include "../MqCommon/logger.hpp"
 #include "../MqCommon/helper.hpp"
 #include "../MqCommon/msg.pb.h"
+#include <google/protobuf/map.h>
 #include <iostream>
 #include <unordered_map>
 #include <mutex>
@@ -17,7 +18,7 @@ namespace mq {
         bool durable;                                       // 持久化标志
         bool exclusive;                                     // 独占标志
         bool auto_delete;                                   // 自动删除标志
-        std::unordered_map<std::string, std::string> args;  // 其他参数
+        google::protobuf::Map<std::string, std::string> args;  // 其他参数
 
         using ptr = std::shared_ptr<MsgQueue>;
 
@@ -25,7 +26,7 @@ namespace mq {
 
         MsgQueue(const std::string& msg_name, bool msg_durable, 
             bool msg_exclusive, bool msg_auto_delete, 
-            const std::unordered_map<std::string, std::string>& msg_args)
+            const google::protobuf::Map<std::string, std::string>& msg_args)
             : name(msg_name),
               durable(msg_durable),
               exclusive(msg_durable),
@@ -176,7 +177,7 @@ namespace mq {
 
         bool declareQueue(const std::string& msg_name, bool msg_durable, 
             bool msg_exclusive, bool msg_auto_delete, 
-            const std::unordered_map<std::string, std::string>& msg_args) {
+            const google::protobuf::Map<std::string, std::string>& msg_args) {
             std::unique_lock<std::mutex> lock(_mutex);
             auto it = _msg_queues.find(msg_name);
             // 若已经存在，则不用插入
