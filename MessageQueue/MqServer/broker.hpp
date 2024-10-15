@@ -21,6 +21,7 @@ namespace mq {
         using MessagePtr = std::shared_ptr<google::protobuf::Message>;;
 
         void onConnection(const muduo::net::TcpConnectionPtr& conn) {
+            
             if (conn->connected()) 
                 LOG_INFO << "新连接建立成功!";
             else 
@@ -45,25 +46,28 @@ namespace mq {
         void onDeleteExchange(const muduo::net::TcpConnectionPtr& conn, const deleteExchangeRequestPtr& message, muduo::Timestamp) {
         }
 
-        void onOpenChannel(const muduo::net::TcpConnectionPtr& conn, const openChannelRequestPtr& message, muduo::Timestamp) {
+        void onDeclareQueue(const muduo::net::TcpConnectionPtr& conn, const declareQueueRequestPtr& message, muduo::Timestamp) {
         }
 
-        void onOpenChannel(const muduo::net::TcpConnectionPtr& conn, const openChannelRequestPtr& message, muduo::Timestamp) {
+        void onDeleteQueue(const muduo::net::TcpConnectionPtr& conn, const deleteQueueRequestPtr& message, muduo::Timestamp) {
         }
 
-        void onOpenChannel(const muduo::net::TcpConnectionPtr& conn, const openChannelRequestPtr& message, muduo::Timestamp) {
+        void onQueueBind(const muduo::net::TcpConnectionPtr& conn, const queueBindRequestPtr& message, muduo::Timestamp) {
         }
 
-        void onOpenChannel(const muduo::net::TcpConnectionPtr& conn, const openChannelRequestPtr& message, muduo::Timestamp) {
+        void onQueueUnBind(const muduo::net::TcpConnectionPtr& conn, const queueUnBindRequestPtr& message, muduo::Timestamp) {
         }
 
-        void onOpenChannel(const muduo::net::TcpConnectionPtr& conn, const openChannelRequestPtr& message, muduo::Timestamp) {
+        void onBasicPublish(const muduo::net::TcpConnectionPtr& conn, const basicPublishRequestPtr& message, muduo::Timestamp) {
         }
 
-        void onOpenChannel(const muduo::net::TcpConnectionPtr& conn, const openChannelRequestPtr& message, muduo::Timestamp) {
+        void onBasicAck(const muduo::net::TcpConnectionPtr& conn, const basicAckRequestPtr& message, muduo::Timestamp) {
         }
     
-       void onOpenChannel(const muduo::net::TcpConnectionPtr& conn, const openChannelRequestPtr& message, muduo::Timestamp) {
+        void onBasicConsume(const muduo::net::TcpConnectionPtr& conn, const basicConsumeRequestPtr& message, muduo::Timestamp) {
+        }
+
+        void onBasicCancel(const muduo::net::TcpConnectionPtr& conn, const basicCancelRequestPtr& message, muduo::Timestamp) {
         }
     public:
         BrokerServer(uint16_t port)
@@ -74,7 +78,7 @@ namespace mq {
             // 现在注册业务处理请求函数
             _dispathcher.registerMessageCallback<openChannelRequest>(std::bind(&BrokerServer::onOpenChannel, this,
                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
+            
             _server.setMessageCallback(std::bind(&ProtobufCodec::onMessage, &_codec, 
                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
             _server.setConnectionCallback(std::bind(&BrokerServer::onConnection, this, std::placeholders::_1));
