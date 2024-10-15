@@ -42,13 +42,13 @@ namespace mq {
         void consume(const std::string& qname) {
             // 1. 取出一个消息
             MessagePtr mp = _host->basicConsume(qname);
-            if (mp.get() == false) {
+            if (mp.get() == nullptr) {
                 DLOG("消费消息失败，%s 队列没有可以消费的消息\n", qname.c_str());
                 return;
             }
             // 2. 取出一个消费者
             Consumer::ptr cp = _cmp->choose(qname);
-            if (cp.get() == false) {
+            if (cp.get() == nullptr) {
                 DLOG("消费消息失败，%s 队列没有消费者\n", qname.c_str());
                 return;
             }
@@ -73,6 +73,8 @@ namespace mq {
         }
 
     public:
+        using ptr = std::shared_ptr<Channel>;
+
         Channel(const std::string& id, 
             const VirtualHost::ptr& host, 
             const ConsumerManager::ptr& cmp, 
@@ -172,14 +174,16 @@ namespace mq {
             auto cb = std::bind(&Channel::callback, this, std::placeholders::_1, 
                 std::placeholders::_2, std::placeholders::_3);    
             _consumer = _cmp->create(req->consumer_tag(), req->queue_name(), req->auto_ack(), cb);
-            if (_consumer.get() == false)
+            if (_consumer.get() == nullptr)
                 basicResponce(false, req->rid(), req->cid()); 
             basicResponce(true, req->rid(), req->cid()); 
         }
 
         // 取消订阅
         void basicCancel(const basicCancelRequestPtr& req) {
-            
+            // 取消订阅就是将消费者从消费者管理句柄中删除
+            _cmp->remove(req->queue_name(), req->consumer_tag());
+            basicResponce(true, req->rid(), req->cid()); 
         }
 
         ~Channel() {
@@ -194,6 +198,51 @@ namespace mq {
         ConsumerManager::ptr _cmp;                 // 消费者管理句柄
         VirtualHost::ptr _host;                    // 虚拟机
         threadpool::ptr _pool;                     // 线程池
+    };
+
+    class ChannelManager {
+    public:
+    using ptr = std::shared_ptr<ChannelManager>;
+
+    ChannelManager() {
+        ILOG("new Channel\n");
+    }
+
+    bool openChannel(const std::string& cid, 
+            const VirtualHost::ptr& host, 
+            const ConsumerManager::ptr& cmp, 
+            const ProtobufCodecPtr& codec, 
+            const muduo::net::TcpConnectionPtr conn, 
+            const threadpool::ptr& pool) {
+        std::unique_lock<std::mutex> lock(_mutex);
+        auto it = _channels.find(cid);
+        if (it != _channels.end())
+            return false;
+        Channel::ptr channel = std::make_shared<Channel>(cid, host, cmp, codec, conn, pool);
+        _channels[cid] = channel;
+        return true;
+    }
+
+    void closeChannel(const std::string& cid) {
+        std::unique_lock<std::mutex> lock(_mutex);
+        _channels.erase(cid);
+    }
+
+    Channel::ptr getChannel(const std::string& cid) {
+        std::unique_lock<std::mutex> lock(_mutex);
+        auto it = _channels.find(cid);
+        if (it == _channels.end())
+            return Channel::ptr();
+        return it->second;        
+    }
+
+    ~ChannelManager() {
+        ILOG("del Channel\n");
+    }
+
+    private:
+        std::mutex _mutex;
+        std::unordered_map<std::string, Channel::ptr> _channels;
     };
 }
 

@@ -23,12 +23,13 @@ namespace mq {
         ConsumerCallback callback;  // 回调函数
 
         Consumer() {}
+
         Consumer(const std::string& ctag, const std::string& queue_name, bool ack, const ConsumerCallback& cb)
             : tag(ctag),
               qname(queue_name),
               auto_ack(ack),
               callback(cb)
-        {}
+        {        }
     };
 
     class QueueConsumer {
@@ -96,6 +97,8 @@ namespace mq {
             std::unique_lock<std::mutex> lock(_mutex);
             return _consumers.empty();
         }
+
+
     private:
         std::mutex _mutex;                  // 锁
         std::string _qname;                 // 队列名称
@@ -108,7 +111,9 @@ namespace mq {
     public:
         using ptr = std::shared_ptr<ConsumerManager>;
 
-        ConsumerManager() {}
+        ConsumerManager() {
+            ILOG("new Consumer\n");
+        }
 
         void initQueueConsumer(const std::string& qname) {
             std::unique_lock<std::mutex> lock(_mutex);
@@ -201,6 +206,10 @@ namespace mq {
         void clear() {
             std::unique_lock<std::mutex> lock(_mutex);
             _qconsumers.clear();
+        }
+
+        ~ConsumerManager() {
+            ILOG("del Consumer\n");
         }
     private:
         std::mutex _mutex;
