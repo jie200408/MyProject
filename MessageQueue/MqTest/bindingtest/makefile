@@ -1,5 +1,5 @@
 test_binding:test_binding.cc
-	g++ -o $@ $^ -std=c++11 -lsqlite3 -lprotobuf -lgtest
+	g++ -o $@ $^ -std=c++11 -lsqlite3 -lprotobuf -lgtest -lpthread
 .PHONY:clean
 clean:
 	rm -f test_binding

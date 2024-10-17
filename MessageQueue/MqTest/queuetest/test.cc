@@ -17,8 +17,8 @@ public:
 };
 
 TEST(queue_test, insert_test) {
-    std::unordered_map<std::string, std::string> map1{{"k1", "v1"}};
-    std::unordered_map<std::string, std::string> map2;
+    google::protobuf::Map<std::string, std::string> map1;
+    google::protobuf::Map<std::string, std::string> map2;
 
     mqptr->declareQueue("queue1", true, false, false, map1);
     mqptr->declareQueue("queue2", true, false, false, map1);

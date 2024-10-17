@@ -7,7 +7,7 @@ public:
     // 每一个独立的单元测试都会运行这个
     void SetUp() override {
         _hp = std::make_shared<mq::VirtualHost>("host1", "./data/host1/message", "./data/host1/host1.db");
-        auto empty_map = std::unordered_map<std::string, std::string>();
+        auto empty_map = google::protobuf::Map<std::string, std::string>();
         _hp->declareExchange("exchange1", mq::ExchangeType::DIRECT, true, false, empty_map);
         _hp->declareExchange("exchange2", mq::ExchangeType::DIRECT, true, false, empty_map);
         _hp->declareExchange("exchange3", mq::ExchangeType::DIRECT, true, false, empty_map);
