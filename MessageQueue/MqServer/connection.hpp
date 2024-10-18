@@ -45,6 +45,10 @@ namespace mq {
         this->basicResponce(true, req->rid(), req->cid());
     }
 
+    Channel::ptr getChannel(const std::string& cid) {
+        return _channels->getChannel(cid);
+    }
+
     ~Connection() {}
 
     private:

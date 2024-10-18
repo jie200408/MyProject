@@ -26,6 +26,10 @@ namespace mq {
                 _mmp->initQueueMessage(q.first);
         }
 
+        MsgQueueMapper::MsgQueueMap allQueue() {
+            return _mqmp->allQueue();
+        }
+
         bool declareExchange(const std::string& ename, ExchangeType etype, bool edurable, 
             bool eauto_delete, const google::protobuf::Map<std::string, std::string>& eargs) {
             return _emp->declareExchange(ename, etype, edurable, eauto_delete, eargs);
