@@ -68,8 +68,10 @@ namespace mq {
                 // 对数据载荷进行反序列化
                 msgp->mutable_payload()->ParseFromString(body);
                 offset += length;
-                if (msgp->payload().vaild() == "0")
+                if (msgp->payload().vaild() == "0") {
+                    DLOG("加载到无效数据: %s\n", msgp->payload().body().c_str());
                     continue;
+                }
                 result.emplace_back(msgp);
             }
             return true;
@@ -220,8 +222,10 @@ namespace mq {
             // 恢复消息
             std::unique_lock<std::mutex> lock(_mutex);
             _msgs = _mapper.gc();
-            for (auto& msg : _msgs) 
+            for (auto& msg : _msgs) {
                 _durable_msgs.insert(std::make_pair(msg->payload().properties().id(), msg));
+                DLOG("恢复消息：%s\n", msg->payload().body().c_str());
+            }
             _valid_count = _msgs.size();
             _total_count = _msgs.size();
         }
@@ -356,7 +360,7 @@ namespace mq {
                 // 查找当前hashmap中是否已经存在
                 auto it = _queue_msgs.find(qname);
                 if (it != _queue_msgs.end()) {
-                    ILOG("当前队列消息已存在: %s\n", qname.c_str());
+                    // ILOG("当前队列消息已存在: %s\n", qname.c_str());
                     return;
                 }
                 msgp = std::make_shared<QueueMessage>(_basedir, qname);

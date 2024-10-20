@@ -205,7 +205,7 @@ namespace mq {
     using ptr = std::shared_ptr<ChannelManager>;
 
     ChannelManager() {
-        ILOG("new Channel\n");
+        ILOG("new Channel %p\n", this);
     }
 
     bool openChannel(const std::string& cid, 
@@ -237,7 +237,7 @@ namespace mq {
     }
 
     ~ChannelManager() {
-        ILOG("del Channel\n");
+        ILOG("del Channel %p\n", this);
     }
 
     private:

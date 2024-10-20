@@ -59,6 +59,7 @@ namespace mq {
             Connection::ptr mconn = _connection_manager->getConnection(conn);
             if (mconn.get() == nullptr) {
                 DLOG("声明交换机时，没有找到对应的连接\n");
+                conn->shutdown();
                 return;
             }
             Channel::ptr channel = mconn->getChannel(message->cid());
@@ -256,7 +257,7 @@ namespace mq {
         muduo::net::TcpServer _server;              // 服务器对象
         muduo::net::EventLoop _baseloop;            // 主事件循环器，响应和监听IO事件
         ProtobufDispatcher _dispathcher;            // 请求分发器对象，需要向分发器中的注册处理函数
-        ProtobufCodecPtr _codec;                       // protobuf 协议处理器，针对收到的请求数据进行protobuf协议处理 
+        ProtobufCodecPtr _codec;                    // protobuf 协议处理器，针对收到的请求数据进行protobuf协议处理 
         VirtualHost::ptr _virtual_host;             // 虚拟机
         ConsumerManager::ptr _consumer_manager;     // 消费者管理句柄
         ConnectionManager::ptr _connection_manager; // 连接管理句柄

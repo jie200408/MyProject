@@ -22,14 +22,22 @@ namespace mq {
         bool auto_ack;              // 是否自动确认
         ConsumerCallback callback;  // 回调函数
 
-        Consumer() {}
+        Consumer() {
+            ILOG("new Consumer %p\n", this);
+        }
 
         Consumer(const std::string& ctag, const std::string& queue_name, bool ack, const ConsumerCallback& cb)
             : tag(ctag),
               qname(queue_name),
               auto_ack(ack),
               callback(cb)
-        {        }
+        {
+            ILOG("new Consumer %p\n", this);
+        }
+
+        ~Consumer() {
+            ILOG("del Consumer %p\n", this);
+        }
     };
 
     class QueueConsumer {
@@ -112,7 +120,6 @@ namespace mq {
         using ptr = std::shared_ptr<ConsumerManager>;
 
         ConsumerManager() {
-            ILOG("new Consumer\n");
         }
 
         void initQueueConsumer(const std::string& qname) {
@@ -209,7 +216,6 @@ namespace mq {
         }
 
         ~ConsumerManager() {
-            ILOG("del Consumer\n");
         }
     private:
         std::mutex _mutex;
