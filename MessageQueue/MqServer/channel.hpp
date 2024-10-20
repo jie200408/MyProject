@@ -136,7 +136,7 @@ namespace mq {
             // 取出一个交换机
             Exchange::ptr ep = _host->selectExchange(req->exchange_name());
             if (ep.get() == nullptr) 
-                basicResponce(false, req->rid(), req->cid());
+                return basicResponce(false, req->rid(), req->cid());
             // 根据获取的交换机找到对应的绑定信息
             BasicProperties* bp = nullptr;
             std::string routing_key;
@@ -169,13 +169,13 @@ namespace mq {
             // 判断当前队列是否存在
             bool ret = _host->existsQueue(req->queue_name());
             if (ret == false)
-                basicResponce(false, req->rid(), req->cid()); 
+                return basicResponce(false, req->rid(), req->cid()); 
 
             auto cb = std::bind(&Channel::callback, this, std::placeholders::_1, 
                 std::placeholders::_2, std::placeholders::_3);    
             _consumer = _cmp->create(req->consumer_tag(), req->queue_name(), req->auto_ack(), cb);
             if (_consumer.get() == nullptr)
-                basicResponce(false, req->rid(), req->cid()); 
+                return basicResponce(false, req->rid(), req->cid()); 
             basicResponce(true, req->rid(), req->cid()); 
         }
 
