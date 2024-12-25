@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package mq;
+
+// 交换机类型
+enum ExchangeType {
+    UNKNOWNTYPE = 0;// 未知模式
+    DIRECT = 1;     // 直连模式
+    FANOUT = 2;     // 广播模式
+    TOPIC = 3;      // 主题模式
+};
+
+// 消息传递模式，是否持久化
+enum DeliveryMode {
+    UNKNOWNMODE = 0;    // 未知模式
+    UNDURABLE = 1;      // 非持久化
+    DURABLE = 2;        // 持久化
+};
+
+// 消息的属性
+message BasicProperties {
+    string id = 1;                  // 消息id
+    DeliveryMode delivery_mode = 2; // 消息传递模式
+    string routing_key = 3;         // 消息的路由模式
+};
+
+// 消息的综合定义
+message Message {
+    // 消息载荷的定义
+    message Payload {
+        BasicProperties properties = 1; // 消息属性
+        string body = 2;                // 消息正文
+        string vaild = 3;               // 消息是否有效
+    }
+    // 消息载荷
+    Payload payload = 1;
+    // 消息的长度和消息的偏移量，便于解决粘包问题
+    uint32 offset = 2;  
+    uint32 length = 3;
+}
+

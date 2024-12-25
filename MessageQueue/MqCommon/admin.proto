@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package mq;
+
+enum UserOptions {
+    SELECT = 0;            // 消息接收用户
+    MODIFY = 1;          // 消息发布用户
+    DELETE = 2;              // 管理员
+};
+
+message userInfoRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+}
+
+message userInfoResponce {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string user_infos = 3;
+}
+
+// 查看当前都存在哪些用户
+// 只要userInfoRequest发送出去了
+// 就将所有的用户信息转发过来
+
+// 还需要查看当前用户的订阅关系
+// 也就是需要根据当前的所有用户
+
+message garbageRecive {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+}
+
+message getExchangeTypeRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string exchange_name = 3;
+}
+
+message getExchangeTypeResponce {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    uint32 type = 3;
+    // 0表示位置 1表示直连 2表示广播 3表示主题
+}

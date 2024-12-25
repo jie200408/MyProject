@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package mq;
+
+enum UserType {
+    RECIVER = 0;            // 消息接收用户
+    PUBLISHER = 1;          // 消息发布用户
+    ADMIN = 2;              // 管理员
+};
+
+message userLogin {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string username = 3;            // 用户姓名
+    string password = 4;            // 用户密码
+    bool isRegister = 5;            // 是否注册
+    UserType user_type = 6;         // 用户类型
+}
+
+message userLogout {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string username = 3;            // 用户姓名
+    UserType user_type = 4;         // 用户类型
+}

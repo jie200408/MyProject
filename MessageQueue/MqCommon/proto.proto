@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package mq;
+
+import "msg.proto";
+import "user.proto";
+
+// 打开信道
+message openChannelRequest {
+    string rid = 1;     // 消息id
+    string cid = 2;     // 信道id
+};
+
+// 关闭信道
+message closeChannelRequest {
+    string rid = 1;     // 消息id
+    string cid = 2;     // 信道id
+};
+
+// 声明交换机
+message declareExchangeRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string exchange_name = 3;       // 交换机名称
+    ExchangeType exchange_type = 4; // 队列名称
+    bool durable = 5;               // 持久化标志
+    bool auto_delete = 6;           // 是否自动删除标志
+    map<string, string> args = 7;   // 其他参数
+};
+
+// 删除交换机
+message deleteExchangeRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string exchange_name = 3;       // 交换机名称
+};
+
+// 声明队列
+message declareQueueRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string queue_name = 3;          // 队列名称
+    bool exclusive = 4;             // 是否独占标志
+    bool durable = 5;               // 是否持久化标志
+    bool auto_delete = 6;           // 是否自动删除
+    map<string, string> args = 7;   // 其他参数
+};
+
+// 删除队列
+message deleteQueueRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string queue_name = 3;          // 队列名称
+};
+
+// 交换机-队列绑定
+message queueBindRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string exchange_name = 3;       // 交换机名称
+    string queue_name = 4;          // 队列名称
+    string binding_key = 5;         // 绑定属性
+};
+
+// 交换机-队列取消绑定
+message queueUnBindRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string exchange_name = 3;       // 交换机名称
+    string queue_name = 4;          // 队列名称
+};
+
+// 消息的发布
+message basicPublishRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string exchange_name = 3;       // 交换机名称
+    BasicProperties properties = 4; // 消息属性
+    string body = 5;                // 消息正文
+};
+
+// 消息的确认
+message basicAckRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string queue_name = 3;          // 队列名称
+    string message_id = 4;          // 消息id
+};
+
+// 订阅消息
+message basicConsumeRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string queue_name = 3;          // 队列名称
+    string consumer_tag = 4;        // 消费者标识
+    bool auto_ack = 5;              // 自动确认标志
+}
+
+// 订阅的取消
+message basicCancelRequest {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    string queue_name = 3;          // 队列名称
+    string consumer_tag = 4;        // 消费者标识
+};
+
+// 消息的推送
+message basicConsumeResponce {
+    string cid = 1;                 // 信道id
+    string consumer_tag = 2;        // 消费者标识
+    string body = 3;                // 消息正文
+    BasicProperties properties = 4; // 消息属性
+};
+
+// 最常见的响应
+message basicCommonResponce {
+    string rid = 1;                 // 消息id
+    string cid = 2;                 // 信道id
+    bool ok = 3;                    // 收到的消息是否正常
+    UserType user_type = 4;         // 用户的类型
+};
