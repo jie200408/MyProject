@@ -89,6 +89,7 @@ namespace mq {
 
         bool exists(const std::string& ctag) {
             std::unique_lock<std::mutex> lock(_mutex);
+            // 循环遍历每个用户
             for (auto& consumer : _consumers) {
                 if (consumer->tag == ctag)
                     return true;

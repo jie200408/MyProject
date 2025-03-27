@@ -229,6 +229,7 @@ namespace mq {
         }
         
     private:
+    
         std::mutex _mutex;
         MsgQueueMapper _mapper;
         MsgQueueMapper::MsgQueueMap _msg_queues;
