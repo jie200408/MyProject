@@ -1,10 +1,10 @@
-#  Message Queue
+#  基于AMQP协议的消息订阅转发系统
 
 [TOC]
 
 ## 简介
 
-​	实现了一个基于AMQP（Advanced Message Queuing Protocol）协议的消息订阅与转发系统，主要实现的是将通过三种不同的订阅模式，将消息路由转发到对应的用户手中。
+​	实现了一个基于AMQP（Advanced Message Queuing Protocol）协议的消息订阅与转发系统，主要实现的是将通过三种不同的订阅模式，将消息通过服务器端路由转发到对应的用户手中。
 
 > 三种订阅模式为：
 >
