@@ -1,9 +1,0 @@
-cc_library(
-    name = "inspect",
-    srcs = glob(["*.cc"]),
-    hdrs = glob(["*.h"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "//muduo/net/http",
-    ],
-)
